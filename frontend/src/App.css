@@ -75,6 +75,34 @@ body {
   font-size: 0.875rem;
 }
 
+/* Filter tabs */
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.filter-tab {
+  padding: 6px 18px;
+  font-size: 0.875rem;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  color: #555;
+}
+
+.filter-tab:hover {
+  border-color: #1976d2;
+  color: #1976d2;
+}
+
+.filter-tab--active {
+  background: #1976d2;
+  border-color: #1976d2;
+  color: #fff;
+}
+
 /* List */
 .todo-list {
   list-style: none;

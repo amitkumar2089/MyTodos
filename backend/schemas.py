@@ -1,9 +1,10 @@
 from datetime import datetime
-from pydantic import BaseModel, Field
+from typing import Annotated
+from pydantic import BaseModel, StringConstraints
 
 
 class TodoCreate(BaseModel):
-    title: str = Field(..., min_length=1, max_length=200, strip_whitespace=True)
+    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
 
 class TodoPatch(BaseModel):

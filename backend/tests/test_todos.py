@@ -36,6 +36,57 @@ def test_list_todo_response_shape(client):
 
 
 # ---------------------------------------------------------------------------
+# GET /todos?status=
+# ---------------------------------------------------------------------------
+
+def _setup_mixed(client):
+    id_a = _post(client, "Pending task").json()["id"]
+    id_b = _post(client, "Done task").json()["id"]
+    client.patch(f"/todos/{id_b}", json={"completed": True})
+    return id_a, id_b
+
+
+def test_list_todos_status_defaults_to_all(client):
+    _setup_mixed(client)
+    assert len(client.get("/todos").json()) == 2
+
+
+def test_list_todos_status_all(client):
+    _setup_mixed(client)
+    assert len(client.get("/todos", params={"status": "all"}).json()) == 2
+
+
+def test_list_todos_status_pending(client):
+    id_a, _ = _setup_mixed(client)
+    items = client.get("/todos", params={"status": "pending"}).json()
+    assert len(items) == 1
+    assert items[0]["id"] == id_a
+    assert items[0]["completed"] is False
+
+
+def test_list_todos_status_completed(client):
+    _, id_b = _setup_mixed(client)
+    items = client.get("/todos", params={"status": "completed"}).json()
+    assert len(items) == 1
+    assert items[0]["id"] == id_b
+    assert items[0]["completed"] is True
+
+
+def test_list_todos_status_pending_empty(client):
+    id_a, _ = _setup_mixed(client)
+    client.patch(f"/todos/{id_a}", json={"completed": True})
+    assert client.get("/todos", params={"status": "pending"}).json() == []
+
+
+def test_list_todos_status_completed_empty(client):
+    assert client.get("/todos", params={"status": "completed"}).json() == []
+
+
+def test_list_todos_status_invalid(client):
+    assert client.get("/todos", params={"status": "done"}).status_code == 422
+
+
+# ---------------------------------------------------------------------------
 # POST /todos
 # ---------------------------------------------------------------------------
 

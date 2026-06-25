@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Literal
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Todo
@@ -8,8 +9,16 @@ router = APIRouter(prefix="/todos", tags=["todos"])
 
 
 @router.get("", response_model=list[TodoResponse])
-def list_todos(db: Session = Depends(get_db)):
-    return db.query(Todo).order_by(Todo.created_at.desc()).all()
+def list_todos(
+    status: Literal["all", "pending", "completed"] = Query(default="all"),
+    db: Session = Depends(get_db),
+):
+    q = db.query(Todo).order_by(Todo.created_at.desc())
+    if status == "pending":
+        q = q.filter(Todo.completed == False)
+    elif status == "completed":
+        q = q.filter(Todo.completed == True)
+    return q.all()
 
 
 @router.post("", response_model=TodoResponse, status_code=201)

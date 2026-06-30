@@ -1,8 +1,9 @@
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from auth import get_current_user
 from database import get_db
-from models import Todo
+from models import Todo, User
 from schemas import TodoCreate, TodoPatch, TodoResponse
 
 router = APIRouter(prefix="/todos", tags=["todos"])
@@ -12,6 +13,7 @@ router = APIRouter(prefix="/todos", tags=["todos"])
 def list_todos(
     status: Literal["all", "pending", "completed"] = Query(default="all"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     q = db.query(Todo).order_by(Todo.created_at.desc())
     if status == "pending":
@@ -22,7 +24,11 @@ def list_todos(
 
 
 @router.post("", response_model=TodoResponse, status_code=201)
-def create_todo(payload: TodoCreate, db: Session = Depends(get_db)):
+def create_todo(
+    payload: TodoCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     todo = Todo(title=payload.title)
     db.add(todo)
     db.commit()
@@ -31,7 +37,12 @@ def create_todo(payload: TodoCreate, db: Session = Depends(get_db)):
 
 
 @router.patch("/{todo_id}", response_model=TodoResponse)
-def toggle_todo(todo_id: int, payload: TodoPatch, db: Session = Depends(get_db)):
+def toggle_todo(
+    todo_id: int,
+    payload: TodoPatch,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     todo = db.get(Todo, todo_id)
     if todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")
@@ -42,7 +53,11 @@ def toggle_todo(todo_id: int, payload: TodoPatch, db: Session = Depends(get_db))
 
 
 @router.delete("/{todo_id}", status_code=204)
-def delete_todo(todo_id: int, db: Session = Depends(get_db)):
+def delete_todo(
+    todo_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     todo = db.get(Todo, todo_id)
     if todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")

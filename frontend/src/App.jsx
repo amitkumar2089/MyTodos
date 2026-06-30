@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { createTodo, deleteTodo, fetchTodos, toggleTodo } from "./api/todos";
 import TodoInput from "./components/TodoInput";
 import TodoList from "./components/TodoList";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 const FILTERS = ["all", "pending", "completed"];
 
-export default function App() {
+function TodoApp() {
+  const { logout } = useAuth();
   const [todos, setTodos] = useState([]);
   const [filter, setFilter] = useState("all");
   const [error, setError] = useState("");
@@ -51,7 +55,12 @@ export default function App() {
 
   return (
     <main className="app">
-      <h1 className="app-title">MyTodo Demo App</h1>
+      <div className="app-header">
+        <h1 className="app-title">MyTodo Demo App</h1>
+        <button className="logout-btn" type="button" onClick={logout}>
+          Log out
+        </button>
+      </div>
       {error && <p className="app-error">{error}</p>}
       <TodoInput onAdd={handleAdd} />
       <div className="filter-tabs">
@@ -67,5 +76,26 @@ export default function App() {
       </div>
       <TodoList todos={todos} onToggle={handleToggle} onDelete={handleDelete} />
     </main>
+  );
+}
+
+function AuthGate() {
+  const { isAuthenticated } = useAuth();
+  const [page, setPage] = useState("login");
+
+  if (isAuthenticated) return <TodoApp />;
+
+  if (page === "register") {
+    return <Register onGoLogin={() => setPage("login")} />;
+  }
+
+  return <Login onGoRegister={() => setPage("register")} />;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   );
 }

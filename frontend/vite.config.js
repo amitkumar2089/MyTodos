@@ -7,6 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/todos": "http://localhost:8000",
+      "/auth": "http://localhost:8000",
     },
   },
 });
